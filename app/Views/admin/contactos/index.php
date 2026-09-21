@@ -4,111 +4,6 @@
 
 <?= $this->include('partials/alerts') ?>
 
-<style>
-    :root {
-        --ctc-border: #e7e9ee;
-        --ctc-muted-bg: #f6f7fb;
-        --ctc-accent: #4a5cf0;
-        --ctc-accent-soft: #eef0fe;
-        --ctc-radius: 10px;
-    }
-
-    .ctc-card {
-        border: 1px solid var(--ctc-border);
-        border-radius: var(--ctc-radius);
-        box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
-    }
-
-    .ctc-card .card-body {
-        padding: 1.35rem;
-    }
-
-    .ctc-section-title {
-        font-size: 1.02rem;
-        font-weight: 600;
-        color: #1c2033;
-        margin-bottom: 0;
-    }
-
-    .ctc-count-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-        background: var(--ctc-accent-soft);
-        color: var(--ctc-accent);
-        font-weight: 600;
-        font-size: .78rem;
-        padding: .18rem .6rem;
-        border-radius: 999px;
-        margin-left: .5rem;
-        vertical-align: middle;
-    }
-
-    .ctc-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .5rem;
-        align-items: center;
-    }
-
-    .ctc-toolbar .btn {
-        border-radius: 8px;
-        font-size: .84rem;
-    }
-
-    .ctc-filters {
-        background: var(--ctc-muted-bg);
-        border: 1px solid var(--ctc-border);
-        border-radius: var(--ctc-radius);
-        padding: .85rem;
-    }
-
-    .ctc-filters .form-label {
-        font-size: .72rem;
-        text-transform: none;
-        color: #6b7280;
-        margin-bottom: .25rem;
-    }
-
-    #results table thead th,
-    #explorerTbody ~ thead th,
-    .table.ctc-table thead th {
-        position: sticky;
-        top: 0;
-        background: #fff;
-        z-index: 1;
-        font-size: .78rem;
-        color: #4b5266;
-        border-bottom: 2px solid var(--ctc-border);
-    }
-
-    .ctc-empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #8a90a2;
-    }
-
-    .ctc-empty-state i {
-        font-size: 2.2rem;
-        display: block;
-        margin-bottom: .5rem;
-        color: #c6cadb;
-    }
-
-    .badge-status {
-        font-weight: 500;
-        font-size: .72rem;
-        padding: .3em .55em;
-    }
-
-    .ctc-upload-drop {
-        border: 1.5px dashed #c9cee0;
-        border-radius: var(--ctc-radius);
-        background: var(--ctc-muted-bg);
-        padding: 1rem;
-    }
-</style>
-
 <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
     <div class="breadcrumb-title pe-3">Contactos</div>
     <div class="ps-3">
@@ -121,92 +16,107 @@
     </div>
 </div>
 
-<div class="card ctc-card mb-3">
+<div class="card mb-4">
     <div class="card-body">
-        <h5 class="ctc-section-title mb-3"><i class='bx bx-cloud-upload me-1'></i> Cargar archivo CSV</h5>
-        <div class="ctc-upload-drop">
-            <form id="uploadForm" class="row g-3 align-items-end">
-                <div class="col-md-8">
-                    <label class="form-label">Selecciona un archivo (separado por ";" o ",")</label>
-                    <input type="file" id="csvFile" accept=".csv" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bx bx-upload me-1"></i> Cargar CSV
-                    </button>
-                </div>
-            </form>
-        </div>
+        <h5 class="card-title mb-3">Cargar Archivo CSV</h5>
+        <form id="uploadForm" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Seleccionar archivo (separado por ";" o ",")</label>
+                <input type="file" id="csvFile" accept=".csv" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Evento <span class="text-muted small">(opcional)</span></label>
+                <select id="csvEvento" class="form-select">
+                    <option value="">Sin evento / cargar suelto</option>
+                    <option value="__nuevo__">+ Crear nuevo evento...</option>
+                </select>
+                <input type="text" id="csvEventoNuevoNombre" class="form-control mt-2" placeholder="Nombre del nuevo evento" style="display:none;">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bx bx-upload me-1"></i> Cargar CSV
+                </button>
+            </div>
+            <div class="col-12">
+                <small class="text-muted">
+                    <i class="bx bx-info-circle"></i>
+                    Si asocias esta carga a un evento, todos los contactos nuevos (y los que se actualicen por duplicado) quedarán etiquetados con ese evento. Podrás buscarlos y filtrarlos por evento más adelante, y ver esta carga en el <strong>Historial</strong>.
+                </small>
+            </div>
+        </form>
     </div>
 </div>
 
-<div class="card ctc-card">
+<div class="card">
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h5 class="ctc-section-title">
-                Búsqueda de registros
-                <span class="ctc-count-pill" id="totalContactosLabel"><i class="bx bx-loader-alt bx-spin"></i> cargando...</span>
+            <h5 class="card-title mb-0">
+                Búsqueda de Registros
+                <span class="text-muted small fw-normal ms-2" id="totalContactosLabel">(cargando total...)</span>
             </h5>
 
-            <div class="ctc-toolbar">
+            <div class="d-flex flex-wrap align-items-center gap-2">
                 <span class="text-muted small" id="tempListCounter">Lista temporal: 0 contactos</span>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button id="addToTempListButton" class="btn btn-outline-info">
-                        <i class="bx bx-list-ul me-1"></i> Agregar a lista
-                    </button>
-                    <button id="viewTempListButton" class="btn btn-outline-primary">
-                        <i class="bx bx-show me-1"></i> Ver lista
-                    </button>
-                    <button id="downloadCSVButton" class="btn btn-outline-success">
-                        <i class="bx bx-file me-1"></i> CSV
-                    </button>
-                    <button id="downloadExcelButton" class="btn btn-outline-success">
-                        <i class="bx bxs-file-export me-1"></i> Excel
-                    </button>
-                    <button id="clearTempListButton" class="btn btn-outline-danger">
-                        <i class="bx bx-trash me-1"></i> Limpiar
-                    </button>
-                </div>
+                <button id="addToTempListButton" class="btn btn-sm btn-info text-white">
+                    <i class="bx bx-list-ul me-1"></i> Agregar a lista
+                </button>
+                <button id="viewTempListButton" class="btn btn-sm btn-primary">
+                    <i class="bx bx-show me-1"></i> Ver lista
+                </button>
+                <button id="downloadCSVButton" class="btn btn-sm btn-success">
+                    <i class="bx bx-file me-1"></i> CSV
+                </button>
+                <button id="downloadExcelButton" class="btn btn-sm btn-success">
+                    <i class="bx bxs-file-export me-1"></i> Excel
+                </button>
+                <button id="clearTempListButton" class="btn btn-sm btn-danger">
+                    <i class="bx bx-trash me-1"></i> Limpiar lista
+                </button>
             </div>
         </div>
 
-        <div class="ctc-toolbar mb-3">
-            <div class="btn-group btn-group-sm" role="group">
-                <button id="openExplorerButton" class="btn btn-dark">
-                    <i class="bx bx-table me-1"></i> Ver toda la data
-                </button>
-                <button id="openCrearButton" class="btn btn-outline-primary">
-                    <i class="bx bx-user-plus me-1"></i> Agregar contacto
-                </button>
-                <button id="openSegmentarButton" class="btn" style="background:#6f42c1;color:#fff;">
-                    <i class="bx bx-filter-alt me-1"></i> Segmentar y exportar
-                </button>
-            </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <button id="openExplorerButton" class="btn btn-sm btn-dark">
+                <i class="bx bx-table me-1"></i> Ver toda la data
+            </button>
+            <button id="openHistorialButton" class="btn btn-sm btn-secondary">
+                <i class="bx bx-history me-1"></i> Historial
+            </button>
+            <button id="openCrearButton" class="btn btn-sm btn-outline-primary">
+                <i class="bx bx-user-plus me-1"></i> Agregar contacto
+            </button>
+            <button id="openSegmentarButton" class="btn btn-sm" style="background:#6f42c1;color:#fff;">
+                <i class="bx bx-filter-alt me-1"></i> Segmentar y exportar
+            </button>
+            <button id="openCorreosButton" class="btn btn-sm btn-danger">
+                <i class="bx bx-envelope me-1"></i> Enviar Correos
+            </button>
         </div>
 
         <!-- Filtros rápidos -->
-        <div class="ctc-filters mb-3">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">País</label>
-                    <select id="filtroPais" class="form-select form-select-sm">
-                        <option value="">Todos los países</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Empresa</label>
-                    <select id="filtroEmpresa" class="form-control form-control-sm" style="width:100%"></select>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" id="limpiarFiltrosButton" class="btn btn-sm btn-outline-secondary w-100">
-                        <i class="bx bx-x me-1"></i> Limpiar filtros
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button type="button" id="buscarDuplicadosButton" class="btn btn-sm btn-warning w-100">
-                        <i class="bx bx-copy-alt me-1"></i> Buscar duplicados
-                    </button>
-                </div>
+        <div class="row g-2 mb-2">
+            <div class="col-md-3">
+                <select id="filtroPais" class="form-select">
+                    <option value="">Todos los países</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="filtroEvento" class="form-select">
+                    <option value="">Todos los eventos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="filtroEmpresa" class="form-control" style="width:100%"></select>
+            </div>
+            <div class="col-md-1">
+                <button type="button" id="limpiarFiltrosButton" class="btn btn-outline-secondary w-100">
+                    <i class="bx bx-x me-1"></i> Limpiar filtros
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="buscarDuplicadosButton" class="btn btn-warning w-100">
+                    <i class="bx bx-copy-alt me-1"></i> Buscar duplicados
+                </button>
             </div>
         </div>
 
@@ -230,10 +140,7 @@
         <div id="message" class="mb-3" style="display:none;"></div>
 
         <div id="results">
-            <div class="ctc-empty-state">
-                <i class='bx bx-search-alt'></i>
-                Empieza a escribir o usa los filtros para buscar.
-            </div>
+            <p class="text-muted text-center py-4">Empieza a escribir o usa los filtros para buscar.</p>
         </div>
     </div>
 </div>
@@ -243,7 +150,7 @@
     <div class="modal-dialog modal-lg" style="max-height: 90vh; margin-top: 5vh; margin-bottom: 5vh;">
         <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header" style="flex-shrink: 0;">
-                <h5 class="modal-title"><i class='bx bx-edit-alt me-1'></i> Editar contacto</h5>
+                <h5 class="modal-title">Editar Contacto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" style="display: flex; flex-direction: column; min-height: 0;">
@@ -310,12 +217,12 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="tempListModalTitle"><i class='bx bx-list-ul me-1'></i> Lista Temporal</h5>
+                <h5 class="modal-title" id="tempListModalTitle">Lista Temporal</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle ctc-table">
+                    <table class="table table-striped table-hover align-middle">
                         <thead>
                             <tr>
                                 <th>Acciones</th>
@@ -342,14 +249,11 @@
     <div class="modal-dialog modal-xl" style="max-height:90vh; margin-top:5vh; margin-bottom:5vh;">
         <div class="modal-content" style="max-height:90vh; display:flex; flex-direction:column;">
             <div class="modal-header" style="flex-shrink:0;">
-                <h5 class="modal-title"><i class='bx bx-copy-alt me-1'></i> Contactos duplicados</h5>
+                <h5 class="modal-title">Contactos duplicados</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="overflow-y:auto; flex-grow:1;" id="duplicadosBody">
-                <div class="ctc-empty-state">
-                    <i class='bx bx-loader-alt bx-spin'></i>
-                    Buscando duplicados...
-                </div>
+                <p class="text-muted text-center py-4">Buscando duplicados...</p>
             </div>
             <div class="modal-footer" style="flex-shrink:0;">
                 <span class="text-muted small me-auto" id="duplicadosResumen"></span>
@@ -362,19 +266,122 @@
     </div>
 </div>
 
+<!-- Modal Historial de cargas / Eventos -->
+<div class="modal fade" id="historialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-height:90vh; margin-top:5vh; margin-bottom:5vh;">
+        <div class="modal-content" style="max-height:90vh; display:flex; flex-direction:column;">
+            <div class="modal-header" style="flex-shrink:0;">
+                <h5 class="modal-title">Historial de cargas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="overflow-y:auto; flex-grow:1;">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="historialTabCargasBtn" data-bs-toggle="tab" data-bs-target="#historialTabCargas" type="button" role="tab">
+                            <i class="bx bx-upload me-1"></i> Cargas realizadas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="historialTabEventosBtn" data-bs-toggle="tab" data-bs-target="#historialTabEventos" type="button" role="tab">
+                            <i class="bx bx-calendar-event me-1"></i> Eventos
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Tab: cargas / importaciones -->
+                    <div class="tab-pane fade show active" id="historialTabCargas" role="tabpanel">
+                        <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                            <div>
+                                <label class="form-label small mb-1">Filtrar por evento</label>
+                                <select id="historialFiltroEvento" class="form-select form-select-sm" style="width:220px">
+                                    <option value="">Todos los eventos</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Archivo</th>
+                                        <th>Evento</th>
+                                        <th>Total filas</th>
+                                        <th>Nuevos</th>
+                                        <th>Actualizados</th>
+                                        <th>Usuario</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historialCargasTbody">
+                                    <tr><td colspan="8" class="text-center text-muted py-4">Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <nav class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="text-muted small" id="historialCargasPageInfo"></span>
+                            <ul class="pagination pagination-sm mb-0" id="historialCargasPagination"></ul>
+                        </nav>
+                    </div>
+
+                    <!-- Tab: eventos -->
+                    <div class="tab-pane fade" id="historialTabEventos" role="tabpanel">
+                        <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                            <div class="flex-grow-1" style="max-width:220px;">
+                                <label class="form-label small mb-1">Nombre del evento</label>
+                                <input type="text" id="nuevoEventoNombre" class="form-control form-control-sm" placeholder="Ej. Feria Industrial 2026">
+                            </div>
+                            <div>
+                                <label class="form-label small mb-1">Fecha</label>
+                                <input type="date" id="nuevoEventoFecha" class="form-control form-control-sm" style="width:160px">
+                            </div>
+                            <div>
+                                <label class="form-label small mb-1">Lugar</label>
+                                <input type="text" id="nuevoEventoLugar" class="form-control form-control-sm" style="width:180px">
+                            </div>
+                            <button type="button" id="crearEventoButton" class="btn btn-sm btn-primary">
+                                <i class="bx bx-plus me-1"></i> Crear evento
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Evento</th>
+                                        <th>Fecha</th>
+                                        <th>Lugar</th>
+                                        <th>Contactos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historialEventosTbody">
+                                    <tr><td colspan="5" class="text-center text-muted py-4">Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="flex-shrink:0;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Explorador de Datos (paginación real, columnas, edición y borrado) -->
 <div class="modal fade" id="explorerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class='bx bx-table me-1'></i> Explorador de datos
-                    <span class="ctc-count-pill" id="explorerTotalLabel"></span>
+                    Explorador de Datos
+                    <span class="text-muted small fw-normal ms-2" id="explorerTotalLabel"></span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="ctc-filters d-flex flex-wrap align-items-end gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
                     <div>
                         <label class="form-label small mb-1">Buscar texto</label>
                         <input type="text" id="explorerTerm" class="form-control form-control-sm" style="width:220px" placeholder="nombre, empresa, correo...">
@@ -382,6 +389,12 @@
                     <div>
                         <label class="form-label small mb-1">País</label>
                         <select id="explorerPais" class="form-select form-select-sm" style="width:160px">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small mb-1">Evento</label>
+                        <select id="explorerEvento" class="form-select form-select-sm" style="width:180px">
                             <option value="">Todos</option>
                         </select>
                     </div>
@@ -423,13 +436,16 @@
                     <button type="button" id="explorerEliminarSeleccionadosButton" class="btn btn-sm btn-danger" disabled>
                         <i class="bx bx-trash me-1"></i> Eliminar seleccionados
                     </button>
+                    <button type="button" id="explorerEnviarCorreoButton" class="btn btn-sm btn-danger" disabled>
+                        <i class="bx bx-envelope me-1"></i> Enviar Correo a seleccionados
+                    </button>
                     <button type="button" id="explorerLimpiarSeleccionButton" class="btn btn-sm btn-outline-secondary">
                         Deseleccionar todo
                     </button>
                 </div>
 
                 <div id="explorerTableWrapper" class="table-responsive">
-                    <table class="table table-striped table-hover align-middle table-sm ctc-table">
+                    <table class="table table-striped table-hover align-middle table-sm">
                         <thead class="table-light" id="explorerThead"></thead>
                         <tbody id="explorerTbody">
                             <tr><td class="text-center text-muted py-4">Cargando...</td></tr>
@@ -451,7 +467,7 @@
     <div class="modal-dialog modal-lg" style="max-height:90vh; margin-top:5vh; margin-bottom:5vh;">
         <div class="modal-content" style="max-height:90vh; display:flex; flex-direction:column;">
             <div class="modal-header" style="flex-shrink:0;">
-                <h5 class="modal-title"><i class='bx bx-filter-alt me-1'></i> Segmentar contactos</h5>
+                <h5 class="modal-title">Segmentar contactos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="overflow-y:auto; flex-grow:1;">
@@ -496,7 +512,7 @@
     <div class="modal-dialog modal-lg" style="max-height: 90vh; margin-top: 5vh; margin-bottom: 5vh;">
         <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header" style="flex-shrink: 0;">
-                <h5 class="modal-title"><i class='bx bx-user-plus me-1'></i> Agregar contacto</h5>
+                <h5 class="modal-title">Agregar Contacto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="crearForm" style="display: flex; flex-direction: column; min-height: 0;">
@@ -577,6 +593,93 @@
     </div>
 </div>
 
+<!-- Modal Enviar Correos -->
+<div class="modal fade" id="correosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-height:90vh; margin-top:5vh; margin-bottom:5vh;">
+        <div class="modal-content" style="max-height:90vh; display:flex; flex-direction:column;">
+            <div class="modal-header" style="flex-shrink:0;">
+                <h5 class="modal-title">Enviar Correos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="overflow-y:auto; flex-grow:1;">
+                <div class="alert alert-info small mb-3" id="correosCuotaInfo">Cargando cupo diario...</div>
+
+                <h6 class="mb-2">1. Plantilla del correo</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label">Asunto</label>
+                        <input type="text" id="correoAsunto" class="form-control" placeholder="Puedes usar {{nombre}} y {{empresa}}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Imagen / banner (opcional)</label>
+                        <input type="file" id="correoImagenInput" accept="image/png,image/jpeg" class="form-control">
+                        <div id="correoImagenPreview" class="mt-2"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">PDF adjunto (opcional)</label>
+                        <input type="file" id="correoPdfInput" accept="application/pdf" class="form-control">
+                        <div id="correoPdfPreview" class="mt-2 small text-muted"></div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Cuerpo del correo</label>
+                        <textarea id="correoCuerpo" class="form-control" rows="5" placeholder="Escribe el mensaje. Puedes usar {{nombre}} y {{empresa}}. Se admite HTML básico."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" id="correoVistaPreviaButton" class="btn btn-sm btn-outline-dark">
+                            <i class="bx bx-show me-1"></i> Vista previa
+                        </button>
+                        <span class="text-muted small ms-2">Muestra cómo se verá el correo antes de enviarlo (usa el primer contacto seleccionado, o un ejemplo si no hay ninguno).</span>
+                    </div>
+                    <div class="col-12" id="correoVistaPreviaPanel" style="display:none;">
+                        <div class="border rounded" style="background:#f8f9fa;">
+                            <div class="border-bottom p-2 small">
+                                <div><strong>Para:</strong> <span id="correoVistaPara"></span></div>
+                                <div><strong>Asunto:</strong> <span id="correoVistaAsunto"></span></div>
+                                <div id="correoVistaAdjuntoWrap" style="display:none;"><strong>Adjunto:</strong> <span id="correoVistaAdjunto"></span></div>
+                            </div>
+                            <iframe id="correoVistaFrame" style="width:100%; height:350px; border:0; background:#fff;"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6 class="mb-2">
+                    2. Destinatarios
+                    (<span id="correosContadorLabel">0</span> seleccionado(s) de <span id="correosTotalLabel">0</span> contactos disponibles)
+                </h6>
+                <p class="text-muted small" id="correosOrigenTexto">Esta lista toma los contactos que tengas cargados arriba en "Búsqueda de Registros". Si no hay resultados, primero busca o filtra contactos.</p>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <button type="button" id="correosSeleccionarTodoButton" class="btn btn-sm btn-outline-primary">Seleccionar todo</button>
+                    <button type="button" id="correosSeleccionarPendientesButton" class="btn btn-sm btn-outline-warning">Seleccionar pendientes</button>
+                    <button type="button" id="correosDeseleccionarButton" class="btn btn-sm btn-outline-secondary">Deseleccionar</button>
+                    <div class="form-check form-switch ms-auto">
+                        <input class="form-check-input" type="checkbox" id="correosSoloSeleccionadosToggle">
+                        <label class="form-check-label small" for="correosSoloSeleccionadosToggle">Mostrar solo seleccionados</label>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height:300px;">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead class="table-light">
+                            <tr><th></th><th>Nombre</th><th>Empresa</th><th>Correo</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody id="correosDestinatariosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="flex-shrink:0;">
+                <span class="text-muted small me-auto" id="correosResultado"></span>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="correosEnviarButton" class="btn btn-danger" disabled>
+                    <i class="bx bx-send me-1"></i> Enviar Correo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -597,6 +700,9 @@
             crear: base_url + 'contactos/crear',
             eliminarPorFiltro: base_url + 'contactos/eliminar-por-filtro',
             exportarCsv: base_url + 'contactos/exportar-csv',
+            eventos: base_url + 'contactos/eventos',
+            crearEvento: base_url + 'contactos/eventos/crear',
+            historial: base_url + 'contactos/historial',
         };
 
         const uploadForm = document.getElementById('uploadForm');
@@ -614,8 +720,14 @@
         const viewTempListButton = document.getElementById('viewTempListButton');
         const tempListCounter = document.getElementById('tempListCounter');
         const filtroPais = document.getElementById('filtroPais');
+        const filtroEvento = document.getElementById('filtroEvento');
         const limpiarFiltrosButton = document.getElementById('limpiarFiltrosButton');
         const buscarDuplicadosButton = document.getElementById('buscarDuplicadosButton');
+
+        const csvEvento = document.getElementById('csvEvento');
+        const csvEventoNuevoNombre = document.getElementById('csvEventoNuevoNombre');
+
+        let eventosCache = [];
 
         const editModalEl = document.getElementById('editModal');
         const editModal = new bootstrap.Modal(editModalEl);
@@ -707,7 +819,7 @@
 
         function renderTempListModal() {
             const tempList = getTempList();
-            document.getElementById('tempListModalTitle').innerHTML = `<i class='bx bx-list-ul me-1'></i> Lista Temporal (${tempList.length} contactos)`;
+            document.getElementById('tempListModalTitle').textContent = `Lista Temporal (${tempList.length} contactos)`;
             const body = document.getElementById('tempListBody');
 
             if (tempList.length === 0) {
@@ -728,11 +840,68 @@
         }
 
         // ---------- Carga de CSV inteligente ----------
+        csvEvento.addEventListener('change', function() {
+            csvEventoNuevoNombre.style.display = this.value === '__nuevo__' ? 'block' : 'none';
+        });
+
+        function poblarSelectEventos(select, { incluirTodos = true, incluirNuevo = false, conteo = false } = {}) {
+            const valorActual = select.value;
+            select.innerHTML = '';
+
+            if (incluirTodos) {
+                const optTodos = document.createElement('option');
+                optTodos.value = '';
+                optTodos.textContent = incluirNuevo ? 'Sin evento / cargar suelto' : 'Todos los eventos';
+                select.appendChild(optTodos);
+            }
+
+            eventosCache.forEach(ev => {
+                const opt = document.createElement('option');
+                opt.value = ev.id;
+                opt.textContent = conteo ? `${ev.nombre} (${ev.total_contactos})` : ev.nombre;
+                select.appendChild(opt);
+            });
+
+            if (incluirNuevo) {
+                const optNuevo = document.createElement('option');
+                optNuevo.value = '__nuevo__';
+                optNuevo.textContent = '+ Crear nuevo evento...';
+                select.appendChild(optNuevo);
+            }
+
+            if ([...select.options].some(o => o.value === valorActual)) {
+                select.value = valorActual;
+            }
+        }
+
+        function cargarEventos() {
+            return fetch(API.eventos)
+                .then(res => res.json())
+                .then(data => {
+                    eventosCache = data;
+                    poblarSelectEventos(filtroEvento, { incluirTodos: true });
+                    poblarSelectEventos(csvEvento, { incluirTodos: true, incluirNuevo: true });
+                    const explorerEventoSelect = document.getElementById('explorerEvento');
+                    if (explorerEventoSelect) poblarSelectEventos(explorerEventoSelect, { incluirTodos: true });
+                    const historialFiltroEventoSelect = document.getElementById('historialFiltroEvento');
+                    if (historialFiltroEventoSelect) poblarSelectEventos(historialFiltroEventoSelect, { incluirTodos: true });
+                    return data;
+                })
+                .catch(() => {});
+        }
+
+        cargarEventos();
+
         uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const file = csvFile.files[0];
             if (!file) {
                 showMessage('Por favor, seleccione un archivo CSV.', 'error');
+                return;
+            }
+
+            if (csvEvento.value === '__nuevo__' && csvEventoNuevoNombre.value.trim() === '') {
+                showMessage('Escribe el nombre del nuevo evento, o selecciona "Sin evento".', 'error');
                 return;
             }
 
@@ -743,6 +912,12 @@
 
             const formData = new FormData();
             formData.append('csvFile', file);
+
+            if (csvEvento.value === '__nuevo__') {
+                formData.append('evento_nombre', csvEventoNuevoNombre.value.trim());
+            } else if (csvEvento.value) {
+                formData.append('evento_id', csvEvento.value);
+            }
 
             fetch(API.csv, {
                     method: 'POST',
@@ -757,6 +932,10 @@
                 .then(data => {
                     showMessage(data.message, 'success');
                     csvFile.value = '';
+                    csvEvento.value = '';
+                    csvEventoNuevoNombre.value = '';
+                    csvEventoNuevoNombre.style.display = 'none';
+                    cargarEventos();
                 })
                 .catch(err => showMessage('Error al cargar el archivo: ' + err.message, 'error'))
                 .finally(() => {
@@ -764,6 +943,271 @@
                     submitBtn.innerHTML = originalBtnHtml;
                 });
         });
+
+        // ======================================================
+        // ---------- Historial de cargas / Administración de eventos ----------
+        // ======================================================
+        const historialModalEl = document.getElementById('historialModal');
+        const historialModal = new bootstrap.Modal(historialModalEl);
+
+        const historialState = {
+            page: 1,
+            perPage: 25,
+            eventoId: '',
+            totalPages: 0,
+        };
+
+        document.getElementById('openHistorialButton').addEventListener('click', function() {
+            historialModal.show();
+            cargarEventos().then(() => {
+                poblarSelectEventos(document.getElementById('historialFiltroEvento'), { incluirTodos: true });
+            });
+            historialState.page = 1;
+            cargarHistorialCargas();
+            cargarHistorialEventos();
+        });
+
+        function cargarHistorialCargas() {
+            const tbody = document.getElementById('historialCargasTbody');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</td></tr>';
+
+            const params = new URLSearchParams();
+            params.set('page', historialState.page);
+            params.set('perPage', historialState.perPage);
+            if (historialState.eventoId) params.set('evento_id', historialState.eventoId);
+
+            fetch(`${API.historial}?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    historialState.page = data.page;
+                    historialState.totalPages = data.totalPages;
+                    renderHistorialCargasTabla(data.data);
+                    renderHistorialCargasPaginacion(data);
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Error al cargar el historial: ${err.message}</td></tr>`;
+                });
+        }
+
+        function renderHistorialCargasTabla(cargas) {
+            const tbody = document.getElementById('historialCargasTbody');
+
+            if (cargas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Todavía no hay cargas registradas.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = cargas.map(c => `
+                <tr>
+                    <td>${formatearFecha(c.created_at)}</td>
+                    <td>${c.nombre_archivo || '—'}</td>
+                    <td>${c.evento_nombre ? c.evento_nombre : '<span class="text-muted">Sin evento</span>'}</td>
+                    <td>${c.total_filas}</td>
+                    <td><span class="badge bg-success">${c.insertados}</span></td>
+                    <td><span class="badge bg-info text-dark">${c.actualizados}</span></td>
+                    <td>${c.usuario_nombre || '—'}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-dark historial-ver-contactos-btn" data-id="${c.id}">
+                            <i class="bx bx-show me-1"></i> Ver contactos
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll('.historial-ver-contactos-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    abrirExplorerPorImportacion(parseInt(this.dataset.id));
+                });
+            });
+        }
+
+        function renderHistorialCargasPaginacion(data) {
+            const pag = document.getElementById('historialCargasPagination');
+            const info = document.getElementById('historialCargasPageInfo');
+            const { page, totalPages, total, perPage } = data;
+
+            info.textContent = total === 0
+                ? 'Sin resultados'
+                : `Página ${page} de ${totalPages} — ${total} carga(s) en total`;
+
+            if (totalPages <= 1) {
+                pag.innerHTML = '';
+                return;
+            }
+
+            const botones = [];
+            const addBtn = (label, target, disabled = false, active = false) => {
+                botones.push(`<li class="page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}">
+                    <button type="button" class="page-link historial-page-btn" data-page="${target}">${label}</button>
+                </li>`);
+            };
+
+            addBtn('«', 1, page === 1);
+            addBtn('‹', page - 1, page === 1);
+            let start = Math.max(1, page - 2);
+            let end = Math.min(totalPages, page + 2);
+            for (let p = start; p <= end; p++) addBtn(p, p, false, p === page);
+            addBtn('›', page + 1, page === totalPages);
+            addBtn('»', totalPages, page === totalPages);
+
+            pag.innerHTML = botones.join('');
+            pag.querySelectorAll('.historial-page-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const target = parseInt(this.dataset.page);
+                    if (target >= 1 && target <= historialState.totalPages && target !== historialState.page) {
+                        historialState.page = target;
+                        cargarHistorialCargas();
+                    }
+                });
+            });
+        }
+
+        document.getElementById('historialFiltroEvento').addEventListener('change', function() {
+            historialState.eventoId = this.value;
+            historialState.page = 1;
+            cargarHistorialCargas();
+        });
+
+        // Abre el Explorador de Datos ya filtrado con los contactos que trajo
+        // una carga puntual del historial (usa la bitácora contacto_importaciones,
+        // así que es exacto aunque esos contactos hayan sido tocados después
+        // por otra carga distinta).
+        function abrirExplorerPorImportacion(importacionId) {
+            explorerState.filtros = {
+                term: '', pais: '', empresa: '', evento_id: '',
+                reglas: [{ campo: 'importacion_id', operador: 'igual', valor: String(importacionId) }],
+            };
+            explorerState.page = 1;
+            document.getElementById('explorerTerm').value = '';
+            document.getElementById('explorerPais').value = '';
+            document.getElementById('explorerEmpresa').value = '';
+            document.getElementById('explorerEvento').value = '';
+            historialModal.hide();
+            explorerModal.show();
+            if (Object.keys(allColumnsMap).length === 0) {
+                cargarColumnas().then(cargarExplorerPaises).then(() => cargarExplorerDatos());
+            } else {
+                cargarExplorerPaises().then(() => cargarExplorerDatos());
+            }
+        }
+
+        // Abre el Explorador de Datos filtrado por "todos los contactos que
+        // alguna vez asistieron a este evento" (histórico completo, vía la
+        // misma bitácora, no solo el último evento registrado en el contacto).
+        function abrirExplorerPorEvento(eventoId) {
+            explorerState.filtros = { term: '', pais: '', empresa: '', evento_id: String(eventoId), reglas: [] };
+            explorerState.page = 1;
+            document.getElementById('explorerTerm').value = '';
+            document.getElementById('explorerPais').value = '';
+            document.getElementById('explorerEmpresa').value = '';
+            historialModal.hide();
+            explorerModal.show();
+            const setEventoYcargar = () => {
+                const sel = document.getElementById('explorerEvento');
+                if (sel) sel.value = String(eventoId);
+                cargarExplorerDatos();
+            };
+            if (Object.keys(allColumnsMap).length === 0) {
+                cargarColumnas().then(cargarExplorerPaises).then(setEventoYcargar);
+            } else {
+                cargarExplorerPaises().then(setEventoYcargar);
+            }
+        }
+
+        function cargarHistorialEventos() {
+            const tbody = document.getElementById('historialEventosTbody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Cargando...</td></tr>';
+
+            fetch(API.eventos)
+                .then(res => res.json())
+                .then(data => {
+                    eventosCache = data;
+                    renderHistorialEventosTabla(data);
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar eventos: ${err.message}</td></tr>`;
+                });
+        }
+
+        function renderHistorialEventosTabla(eventos) {
+            const tbody = document.getElementById('historialEventosTbody');
+
+            if (eventos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Todavía no has creado ningún evento.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = eventos.map(ev => `
+                <tr>
+                    <td>
+                        <strong>${ev.nombre}</strong>
+                        ${ev.descripcion ? `<br><span class="text-muted small">${ev.descripcion}</span>` : ''}
+                    </td>
+                    <td>${ev.fecha_evento ? formatearFechaSolo(ev.fecha_evento) : '—'}</td>
+                    <td>${ev.lugar || '—'}</td>
+                    <td><span class="badge bg-primary">${ev.total_contactos}</span></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-dark historial-ver-evento-btn" data-id="${ev.id}">
+                            <i class="bx bx-show me-1"></i> Ver contactos
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll('.historial-ver-evento-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    abrirExplorerPorEvento(parseInt(this.dataset.id));
+                });
+            });
+        }
+
+        document.getElementById('crearEventoButton').addEventListener('click', function() {
+            const nombre = document.getElementById('nuevoEventoNombre').value.trim();
+            const fecha = document.getElementById('nuevoEventoFecha').value;
+            const lugar = document.getElementById('nuevoEventoLugar').value.trim();
+
+            if (nombre === '') {
+                showMessage('Escribe el nombre del evento.', 'error');
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+
+            fetch(API.crearEvento, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, fecha_evento: fecha, lugar }),
+                })
+                .then(res => {
+                    if (!res.ok) return res.json().then(err => { throw new Error(err.message || 'Error al crear el evento'); });
+                    return res.json();
+                })
+                .then(() => {
+                    document.getElementById('nuevoEventoNombre').value = '';
+                    document.getElementById('nuevoEventoFecha').value = '';
+                    document.getElementById('nuevoEventoLugar').value = '';
+                    showMessage('Evento creado exitosamente', 'success');
+                    return cargarEventos();
+                })
+                .then(() => cargarHistorialEventos())
+                .catch(err => showMessage('Error al crear evento: ' + err.message, 'error'))
+                .finally(() => { btn.disabled = false; });
+        });
+
+        function formatearFecha(mysqlDatetime) {
+            if (!mysqlDatetime) return '—';
+            const d = new Date(mysqlDatetime.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return mysqlDatetime;
+            return d.toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatearFechaSolo(mysqlDate) {
+            if (!mysqlDate) return '—';
+            const d = new Date(mysqlDate.includes('T') ? mysqlDate : mysqlDate + 'T00:00:00');
+            if (isNaN(d.getTime())) return mysqlDate;
+            return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
 
         // ---------- Filtros rápidos: país y empresa ----------
         fetch(API.paises)
@@ -812,19 +1256,26 @@
             ejecutarBusqueda(searchInput.value.trim());
         });
 
+        filtroEvento.addEventListener('change', function() {
+            ejecutarBusqueda(searchInput.value.trim());
+        });
+
         limpiarFiltrosButton.addEventListener('click', function() {
             searchInput.value = '';
             filtroPais.value = '';
+            filtroEvento.value = '';
             $('#filtroEmpresa').val(null).trigger('change');
+            ejecutarBusqueda('');
         });
 
         // ---------- Búsqueda en tiempo real (texto + filtros) ----------
         function ejecutarBusqueda(term) {
             const pais = filtroPais.value;
             const empresa = $('#filtroEmpresa').val() || '';
+            const eventoId = filtroEvento.value;
 
-            if (!term && !pais && !empresa) {
-                resultsDiv.innerHTML = '<div class="ctc-empty-state"><i class="bx bx-search-alt"></i>Empieza a escribir o usa los filtros para buscar.</div>';
+            if (!term && !pais && !empresa && !eventoId) {
+                resultsDiv.innerHTML = '<p class="text-muted text-center py-4">Empieza a escribir o usa los filtros para buscar.</p>';
                 globalResults = [];
                 searchSpinner.style.display = 'none';
                 return;
@@ -842,6 +1293,7 @@
             if (term) params.set('term', term);
             if (pais) params.set('pais', pais);
             if (empresa) params.set('empresa', empresa);
+            if (eventoId) params.set('evento_id', eventoId);
 
             fetch(`${API.buscar}?${params.toString()}`, {
                     signal: searchAbortController.signal
@@ -883,7 +1335,7 @@
             resultsDiv.innerHTML = '';
 
             if (results.length === 0) {
-                resultsDiv.innerHTML = '<div class="ctc-empty-state"><i class="bx bx-search-alt"></i>No se encontraron resultados.</div>';
+                resultsDiv.innerHTML = '<p class="text-muted text-center py-4">No se encontraron resultados.</p>';
                 return;
             }
 
@@ -892,12 +1344,12 @@
 
             const fields = [
                 'nombres_y_apellidos_completos', 'empresa', 'cargo', 'correo_corporativo',
-                'correo_electronico', 'celular', 'telefono', 'linkedin', 'pais', 'nota_origen',
-                'status_correo_corporativo'
+                'correo_electronico', 'celular', 'telefono', 'linkedin', 'pais', 'evento_nombre',
+                'nota_origen', 'status_correo_corporativo'
             ];
             const headers = [
                 'Nombres y Apellidos', 'Empresa', 'Cargo', 'Correo Corporativo',
-                'Correo Personal', 'Celular', 'Teléfono', 'LinkedIn', 'País', 'Nota', 'Status Correo'
+                'Correo Personal', 'Celular', 'Teléfono', 'LinkedIn', 'País', 'Evento', 'Nota', 'Status Correo'
             ];
 
             let thead = `<tr><th><input type="checkbox" id="selectAll" class="form-check-input"></th><th>Acciones</th>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
@@ -911,6 +1363,7 @@
                     </td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${r.id}">Editar</button>
+                        <button class="btn btn-sm btn-outline-danger correo-single-btn" data-id="${r.id}" data-sincorreo="${!correoDeContacto(r) ? '1' : '0'}" title="Enviar correo a este contacto"><i class="bx bx-envelope"></i></button>
                         ${isInTemp ? `<button class="btn btn-sm btn-outline-danger ms-1 remove-temp-btn" data-id="${r.id}">Quitar</button>` : ''}
                     </td>
                     ${fields.map(f => `<td title="${(r[f] || '').toString().replace(/"/g, '&quot;')}">${r[f] || ''}</td>`).join('')}
@@ -921,7 +1374,7 @@
             resultsDiv.innerHTML = `
             <p class="text-muted small mb-2">${results.length} resultado(s)${results.length === 500 ? ' (mostrando los primeros 500, afina tu búsqueda para ver menos)' : ''}</p>
             <div class="table-responsive" style="max-height:600px;">
-                <table class="table table-striped table-hover align-middle ctc-table">
+                <table class="table table-striped table-hover align-middle">
                     <thead class="table-light">${thead}</thead>
                     <tbody>${tbody}</tbody>
                 </table>
@@ -941,6 +1394,17 @@
                 btn.addEventListener('click', function() {
                     const contact = globalResults.find(c => c.id.toString() === this.dataset.id);
                     if (contact) openEditModal(contact);
+                });
+            });
+
+            document.querySelectorAll('.correo-single-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.dataset.sincorreo === '1') {
+                        showMessage('Este contacto no tiene correo corporativo ni personal registrado, no se le puede enviar correo.', 'error');
+                        return;
+                    }
+                    const contact = globalResults.find(c => c.id.toString() === this.dataset.id);
+                    if (contact) abrirModalCorreos([contact], [contact.id]);
                 });
             });
 
@@ -1117,21 +1581,21 @@
         function cargarDuplicados() {
             const body = document.getElementById('duplicadosBody');
             const resumen = document.getElementById('duplicadosResumen');
-            body.innerHTML = '<div class="ctc-empty-state"><i class="bx bx-loader-alt bx-spin"></i>Buscando duplicados...</div>';
+            body.innerHTML = '<p class="text-muted text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span> Buscando duplicados...</p>';
             resumen.textContent = '';
 
             fetch(API.duplicados)
                 .then(res => res.json())
                 .then(data => {
                     if (!data.grupos || data.grupos.length === 0) {
-                        body.innerHTML = '<div class="ctc-empty-state"><i class="bx bx-check-circle"></i>No se encontraron contactos duplicados.</div>';
+                        body.innerHTML = '<p class="text-muted text-center py-4">No se encontraron contactos duplicados. 🎉</p>';
                         return;
                     }
 
                     resumen.textContent = `${data.totalGrupos} grupo(s) de duplicados${data.truncado ? ' (mostrando los primeros 200)' : ''}`;
 
                     body.innerHTML = data.grupos.map((grupo, gi) => `
-                    <div class="card ctc-card mb-3">
+                    <div class="card mb-3">
                         <div class="card-header py-2">
                             <strong>${grupo.criterio}:</strong> ${grupo.valor}
                             <span class="badge bg-warning text-dark ms-2">${grupo.contactos.length} coincidencias</span>
@@ -1166,7 +1630,7 @@
                 `).join('');
                 })
                 .catch(err => {
-                    body.innerHTML = `<div class="ctc-empty-state text-danger"><i class="bx bx-error-circle"></i>Error al buscar duplicados: ${err.message}</div>`;
+                    body.innerHTML = `<p class="text-danger text-center py-4">Error al buscar duplicados: ${err.message}</p>`;
                 });
         }
 
@@ -1296,13 +1760,14 @@
         const explorerState = {
             page: 1,
             perPage: 50,
-            filtros: { term: '', pais: '', empresa: '', reglas: [] },
+            filtros: { term: '', pais: '', empresa: '', evento_id: '', reglas: [] },
             data: [],
             total: 0,
             totalPages: 0,
             selectedIds: new Set(),
         };
-        // Guarda los datos completos de cada contacto que se haya visto/seleccionado en el explorador.
+        // Guarda los datos completos de cada contacto que se haya visto/seleccionado en el explorador,
+        // para poder enviarle correo aunque ya haya cambiado de página.
         const explorerContactosCache = new Map();
 
         document.getElementById('openExplorerButton').addEventListener('click', function() {
@@ -1336,6 +1801,7 @@
             if (filtros.term) params.set('term', filtros.term);
             if (filtros.pais) params.set('pais', filtros.pais);
             if (filtros.empresa) params.set('empresa', filtros.empresa);
+            if (filtros.evento_id) params.set('evento_id', filtros.evento_id);
             if (filtros.reglas && filtros.reglas.length > 0) params.set('reglas', JSON.stringify(filtros.reglas));
             return params;
         }
@@ -1359,7 +1825,7 @@
                     renderExplorerTable();
                     renderExplorerPagination();
                     document.getElementById('explorerTotalLabel').textContent =
-                        `${data.total.toLocaleString('es-PE')} coinciden`;
+                        `(${data.total.toLocaleString('es-PE')} contacto(s) coinciden)`;
                 })
                 .catch(err => {
                     tbody.innerHTML = `<tr><td class="text-center text-danger py-4">Error al cargar: ${err.message}</td></tr>`;
@@ -1385,6 +1851,7 @@
                         <td><input type="checkbox" class="form-check-input explorer-row-checkbox" data-id="${r.id}" ${explorerState.selectedIds.has(r.id) ? 'checked' : ''}></td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary explorer-edit-btn" data-id="${r.id}">Editar</button>
+                            <button class="btn btn-sm btn-outline-danger explorer-correo-btn" data-id="${r.id}" data-sincorreo="${!correoDeContacto(r) ? '1' : '0'}" title="Enviar correo a este contacto"><i class="bx bx-envelope"></i></button>
                         </td>
                         ${cols.map(c => `<td title="${(r[c] || '').toString().replace(/"/g, '&quot;')}">${r[c] || ''}</td>`).join('')}
                     </tr>
@@ -1419,6 +1886,20 @@
                 });
             });
 
+            document.querySelectorAll('.explorer-correo-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.dataset.sincorreo === '1') {
+                        showMessage('Este contacto no tiene correo corporativo ni personal registrado, no se le puede enviar correo.', 'error');
+                        return;
+                    }
+                    const contact = explorerState.data.find(c => c.id.toString() === this.dataset.id);
+                    if (contact) {
+                        explorerModal.hide();
+                        abrirModalCorreos([contact], [contact.id]);
+                    }
+                });
+            });
+
             updateExplorerSeleccionLabel();
         }
 
@@ -1426,6 +1907,7 @@
             const n = explorerState.selectedIds.size;
             document.getElementById('explorerSeleccionLabel').textContent = `${n} seleccionado(s) (en todas las páginas)`;
             document.getElementById('explorerEliminarSeleccionadosButton').disabled = n === 0;
+            document.getElementById('explorerEnviarCorreoButton').disabled = n === 0;
         }
 
         function renderExplorerPagination() {
@@ -1483,6 +1965,7 @@
             explorerState.filtros.term = document.getElementById('explorerTerm').value.trim();
             explorerState.filtros.pais = document.getElementById('explorerPais').value;
             explorerState.filtros.empresa = document.getElementById('explorerEmpresa').value.trim();
+            explorerState.filtros.evento_id = document.getElementById('explorerEvento').value;
             explorerState.page = 1;
             cargarExplorerDatos();
         });
@@ -1491,7 +1974,8 @@
             document.getElementById('explorerTerm').value = '';
             document.getElementById('explorerPais').value = '';
             document.getElementById('explorerEmpresa').value = '';
-            explorerState.filtros = { term: '', pais: '', empresa: '', reglas: [] };
+            document.getElementById('explorerEvento').value = '';
+            explorerState.filtros = { term: '', pais: '', empresa: '', evento_id: '', reglas: [] };
             explorerState.page = 1;
             cargarExplorerDatos();
         });
@@ -1539,6 +2023,25 @@
                     })
                     .catch(err => showMessage('Error al eliminar: ' + err.message, 'error'));
             });
+        });
+
+        document.getElementById('explorerEnviarCorreoButton').addEventListener('click', function() {
+            const ids = Array.from(explorerState.selectedIds);
+            if (ids.length === 0) return;
+
+            const contactos = ids.map(id => explorerContactosCache.get(id)).filter(Boolean);
+
+            if (contactos.length < ids.length) {
+                showMessage('Algunos contactos seleccionados ya no están en memoria (cambiaste de página sin verlos). Se usarán solo los disponibles.', 'error');
+            }
+
+            if (contactos.length === 0) {
+                showMessage('No se pudo recuperar la información de los contactos seleccionados. Vuelve a seleccionarlos.', 'error');
+                return;
+            }
+
+            explorerModal.hide();
+            abrirModalCorreos(contactos, contactos.map(c => c.id));
         });
 
         // ======================================================
@@ -1609,7 +2112,7 @@
             div.innerHTML = `
                 <div class="col-md-4">
                     <select class="form-select form-select-sm regla-campo">
-                        ${Object.entries(allColumnsMap).map(([field, label]) => `<option value="${field}">${label}</option>`).join('')}
+                        ${Object.entries(allColumnsMap).filter(([field]) => field !== 'evento_nombre').map(([field, label]) => `<option value="${field}">${label}</option>`).join('')}
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -1683,11 +2186,12 @@
 
         document.getElementById('segmentarVerExplorerButton').addEventListener('click', function() {
             const reglas = leerReglasSegmentacion();
-            explorerState.filtros = { term: '', pais: '', empresa: '', reglas };
+            explorerState.filtros = { term: '', pais: '', empresa: '', evento_id: '', reglas };
             explorerState.page = 1;
             document.getElementById('explorerTerm').value = '';
             document.getElementById('explorerPais').value = '';
             document.getElementById('explorerEmpresa').value = '';
+            document.getElementById('explorerEvento').value = '';
             segmentarModal.hide();
             explorerModal.show();
             cargarExplorerPaises().then(() => cargarExplorerDatos());
@@ -1737,23 +2241,429 @@
             });
         });
 
-        // ---------- Total de contactos en la BD (informativo) ----------
-        function cargarTotalContactos() {
-            fetch(base_url + 'contactos/total')
-                .then(res => res.json())
-                .then(data => {
-                    const label = document.getElementById('totalContactosLabel');
-                    if (label) {
-                        label.innerHTML = `<i class="bx bx-database"></i> ${data.total.toLocaleString('es-PE')} en total`;
+        // ======================================================
+        // ---------- Enviar Correos (Mailgun) ----------
+        // ======================================================
+        const correosModalEl = document.getElementById('correosModal');
+        const correosModal = new bootstrap.Modal(correosModalEl);
+        let correoImagenPath = '';
+        let correoPdfPath = '';
+        const correosSeleccionados = new Set();
+        let correosCuota = { limite: 50, enviados: 0, disponibles: 50, proximaLiberacion: null, cargada: false };
+        let correosPool = []; // de dónde salen los destinatarios disponibles (búsqueda principal, explorador, o un solo contacto)
+
+        /**
+         * Punto de entrada ÚNICO para abrir el modal de correos, sin importar desde dónde se llame
+         * (botón general, explorador, o el ícono de correo de una fila puntual).
+         * @param {Array} contactos       Contactos disponibles para elegir en este envío.
+         * @param {Array} preseleccionarIds  Ids que ya deben venir marcados al abrir el modal.
+         */
+        function abrirModalCorreos(contactos, preseleccionarIds = []) {
+            if (!contactos || contactos.length === 0) {
+                showMessage('No hay contactos disponibles para enviar correo.', 'error');
+                return;
+            }
+
+            correosPool = contactos;
+            correosSeleccionados.clear();
+            preseleccionarIds.forEach(id => correosSeleccionados.add(id));
+
+            document.getElementById('correoVistaPreviaPanel').style.display = 'none';
+            document.getElementById('correosSoloSeleccionadosToggle').checked = preseleccionarIds.length > 0;
+            document.getElementById('correosOrigenTexto').textContent = preseleccionarIds.length > 0
+                ? 'Estos son los contactos que traías seleccionados. Puedes destildar el filtro de abajo para elegir otros de la búsqueda actual.'
+                : 'Esta lista toma los contactos que tengas cargados arriba en "Búsqueda de Registros". Si no hay resultados, primero busca o filtra contactos.';
+
+            renderCorreosDestinatarios();
+            cargarCuotaCorreos();
+            correosModal.show();
+        }
+
+        document.getElementById('openCorreosButton').addEventListener('click', function() {
+            if (globalResults.length === 0) {
+                showMessage('Primero realiza una búsqueda para tener contactos disponibles para enviar correo.', 'error');
+                return;
+            }
+            abrirModalCorreos(globalResults, []);
+        });
+
+        document.getElementById('correosSoloSeleccionadosToggle').addEventListener('change', renderCorreosDestinatarios);
+
+        function cargarCuotaCorreos() {
+            const info = document.getElementById('correosCuotaInfo');
+            info.className = 'alert alert-info small mb-3';
+            info.textContent = 'Cargando cupo diario...';
+            correosCuota.cargada = false;
+
+            fetch(base_url + 'contactos/correos/cuota')
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    const esperadas = ['limite', 'enviados', 'disponibles'];
+                    const formatoValido = data && esperadas.every(k => typeof data[k] === 'number');
+
+                    if (!ok || !formatoValido) {
+                        correosCuota = { limite: 0, enviados: 0, disponibles: 0, proximaLiberacion: null, cargada: false };
+                        info.className = 'alert alert-danger small mb-3';
+                        info.textContent = 'No se pudo leer el cupo diario. Verifica que hayas ejecutado la migración '
+                            + '(php spark migrate) y que la ruta contactos/correos/cuota exista en Routes.php. '
+                            + 'Respuesta recibida: ' + JSON.stringify(data);
+                        return;
                     }
+
+                    correosCuota = {
+                        limite: data.limite,
+                        enviados: data.enviados,
+                        disponibles: data.disponibles,
+                        proximaLiberacion: data.proximaLiberacion || null,
+                        cargada: true,
+                    };
+
+                    info.textContent = `Cupo diario: ${data.enviados}/${data.limite} usados en las últimas 24 horas. Disponibles ahora: ${data.disponibles}.` +
+                        (data.disponibles === 0 && data.proximaLiberacion ? ` Se libera cupo el ${data.proximaLiberacion}.` : '');
+                    info.className = 'alert small mb-3 ' + (data.disponibles === 0 ? 'alert-danger' : 'alert-info');
                 })
-                .catch(() => {
-                    const label = document.getElementById('totalContactosLabel');
-                    if (label) label.innerHTML = '';
+                .catch(err => {
+                    correosCuota = { limite: 0, enviados: 0, disponibles: 0, proximaLiberacion: null, cargada: false };
+                    info.className = 'alert alert-danger small mb-3';
+                    info.textContent = 'Error de conexión al consultar el cupo diario: ' + err.message;
                 });
         }
 
-        cargarTotalContactos();
+        /**
+         * Único punto de verdad para decidir si un contacto tiene correo utilizable.
+         * Prioriza correo_corporativo, luego correo_electronico. Ignora espacios en blanco.
+         * Debe reflejar la misma regla que usa el backend (EnvioCorreoController::enviar).
+         */
+        function correoDeContacto(c) {
+            const corporativo = (c.correo_corporativo || '').trim();
+            if (corporativo !== '') return corporativo;
+            const personal = (c.correo_electronico || '').trim();
+            return personal !== '' ? personal : '';
+        }
+
+        function renderCorreosDestinatarios() {
+            const body = document.getElementById('correosDestinatariosBody');
+            document.getElementById('correosTotalLabel').textContent = correosPool.length;
+
+            const soloSeleccionados = document.getElementById('correosSoloSeleccionadosToggle').checked;
+            const lista = soloSeleccionados ? correosPool.filter(c => correosSeleccionados.has(c.id)) : correosPool;
+
+            if (lista.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">${soloSeleccionados ? 'No has seleccionado ningún contacto todavía.' : 'Sin contactos disponibles.'}</td></tr>`;
+            } else {
+                body.innerHTML = lista.map(c => {
+                    const correo = correoDeContacto(c);
+                    const estado = c.estado_envio_correo || 'pendiente';
+                    const badgeClase = estado === 'enviado' ? 'bg-success' : (estado === 'error' ? 'bg-danger' : 'bg-secondary');
+                    return `<tr class="${!correo ? 'text-muted' : ''}">
+                        <td><input type="checkbox" class="form-check-input correo-row-checkbox" data-id="${c.id}" data-sincorreo="${!correo ? '1' : '0'}" title="${!correo ? 'Este contacto no tiene correo corporativo ni personal registrado' : ''}" ${correosSeleccionados.has(c.id) ? 'checked' : ''}></td>
+                        <td>${c.nombres_y_apellidos_completos || ''}</td>
+                        <td>${c.empresa || ''}</td>
+                        <td>${correo || '<span class="text-danger">sin correo</span>'}</td>
+                        <td><span class="badge ${badgeClase}">${estado}</span></td>
+                    </tr>`;
+                }).join('');
+            }
+
+            document.querySelectorAll('.correo-row-checkbox').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const id = parseInt(this.dataset.id);
+                    if (this.checked) {
+                        if (this.dataset.sincorreo === '1') {
+                            this.checked = false;
+                            showMessage('Este contacto no tiene correo corporativo ni personal registrado, no se le puede enviar correo.', 'error');
+                            return;
+                        }
+                        if (correosCuota.cargada && correosSeleccionados.size >= correosCuota.disponibles) {
+                            this.checked = false;
+                            showMessage(`Ya alcanzaste el cupo disponible (${correosCuota.disponibles}). No se pueden seleccionar más para evitar bloqueos por spam.`, 'error');
+                            return;
+                        }
+                        correosSeleccionados.add(id);
+                    } else {
+                        correosSeleccionados.delete(id);
+                        if (soloSeleccionados) renderCorreosDestinatarios(); // desaparece de la lista filtrada
+                    }
+                    updateCorreosContador();
+                });
+            });
+
+            updateCorreosContador();
+        }
+
+        function updateCorreosContador() {
+            document.getElementById('correosContadorLabel').textContent = correosSeleccionados.size;
+            document.getElementById('correosEnviarButton').disabled = correosSeleccionados.size === 0;
+        }
+
+        /**
+         * Agrega ids a la selección respetando el cupo disponible (máx. 50/24h por defecto).
+         * Devuelve cuántos se quedaron fuera por falta de cupo.
+         */
+        function agregarConLimiteDeCuota(candidatos) {
+            if (!correosCuota.cargada) {
+                showMessage('Aún no se cargó el cupo diario, espera un segundo e inténtalo de nuevo.', 'error');
+                return 0;
+            }
+
+            let disponiblesRestantes = correosCuota.disponibles - correosSeleccionados.size;
+            let excedentes = 0;
+
+            for (const id of candidatos) {
+                if (correosSeleccionados.has(id)) continue;
+                if (disponiblesRestantes <= 0) {
+                    excedentes++;
+                    continue;
+                }
+                correosSeleccionados.add(id);
+                disponiblesRestantes--;
+            }
+
+            return excedentes;
+        }
+
+        document.getElementById('correosSeleccionarTodoButton').addEventListener('click', function() {
+            const candidatos = correosPool.filter(c => correoDeContacto(c) !== '').map(c => c.id);
+            const excedentes = agregarConLimiteDeCuota(candidatos);
+            renderCorreosDestinatarios();
+            if (excedentes > 0) {
+                showMessage(`Se seleccionaron hasta el cupo diario disponible (${correosCuota.disponibles}). ${excedentes} contacto(s) quedaron sin seleccionar por el límite, para evitar bloqueos por spam.`, 'error');
+            }
+        });
+
+        document.getElementById('correosSeleccionarPendientesButton').addEventListener('click', function() {
+            const candidatos = correosPool
+                .filter(c => correoDeContacto(c) !== '' && c.estado_envio_correo !== 'enviado')
+                .map(c => c.id);
+            const excedentes = agregarConLimiteDeCuota(candidatos);
+            renderCorreosDestinatarios();
+            if (excedentes > 0) {
+                showMessage(`Se seleccionaron hasta el cupo diario disponible (${correosCuota.disponibles}). ${excedentes} contacto(s) pendientes quedaron sin seleccionar por el límite, para evitar bloqueos por spam.`, 'error');
+            }
+        });
+
+        document.getElementById('correosDeseleccionarButton').addEventListener('click', function() {
+            correosSeleccionados.clear();
+            renderCorreosDestinatarios();
+        });
+
+        document.getElementById('correoImagenInput').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('archivo', file);
+            fd.append('tipo', 'imagen');
+
+            fetch(base_url + 'contactos/correos/subir-archivo', { method: 'POST', body: fd })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.message || 'Error al subir la imagen');
+                    correoImagenPath = data.path;
+                    document.getElementById('correoImagenPreview').innerHTML =
+                        `<img src="${data.url}" style="max-height:80px;" class="border rounded"> <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="correoImagenQuitar">Quitar</button>`;
+                    document.getElementById('correoImagenQuitar').addEventListener('click', function() {
+                        correoImagenPath = '';
+                        document.getElementById('correoImagenPreview').innerHTML = '';
+                        document.getElementById('correoImagenInput').value = '';
+                    });
+                })
+                .catch(err => showMessage(err.message, 'error'));
+        });
+
+        document.getElementById('correoPdfInput').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('archivo', file);
+            fd.append('tipo', 'pdf');
+
+            fetch(base_url + 'contactos/correos/subir-archivo', { method: 'POST', body: fd })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (!ok) throw new Error(data.message || 'Error al subir el PDF');
+                    correoPdfPath = data.path;
+                    document.getElementById('correoPdfPreview').innerHTML =
+                        `📎 ${file.name} <button type="button" class="btn btn-sm btn-outline-danger ms-2" id="correoPdfQuitar">Quitar</button>`;
+                    document.getElementById('correoPdfQuitar').addEventListener('click', function() {
+                        correoPdfPath = '';
+                        document.getElementById('correoPdfPreview').innerHTML = '';
+                        document.getElementById('correoPdfInput').value = '';
+                    });
+                })
+                .catch(err => showMessage(err.message, 'error'));
+        });
+
+        document.getElementById('correoVistaPreviaButton').addEventListener('click', function() {
+            const asunto = document.getElementById('correoAsunto').value.trim();
+            const cuerpo = document.getElementById('correoCuerpo').value.trim();
+
+            if (!asunto && !cuerpo && !correoImagenPath) {
+                showMessage('Completa al menos el asunto, el cuerpo o la imagen para ver la vista previa', 'error');
+                return;
+            }
+
+            // Usa el primer contacto seleccionado (con datos reales) o un contacto de ejemplo.
+            let nombre = 'Juan Pérez';
+            let empresa = 'Empresa Ejemplo S.A.C.';
+            let correoDestino = 'ejemplo@correo.com';
+
+            if (correosSeleccionados.size > 0) {
+                const primerId = Array.from(correosSeleccionados)[0];
+                const contacto = correosPool.find(c => c.id === primerId);
+                if (contacto) {
+                    nombre = contacto.nombres_y_apellidos_completos || nombre;
+                    empresa = contacto.empresa || empresa;
+                    correoDestino = correoDeContacto(contacto) || correoDestino;
+                }
+            }
+
+            const asuntoFinal = asunto.replace(/\{\{nombre\}\}/g, nombre).replace(/\{\{empresa\}\}/g, empresa);
+            let cuerpoFinal = cuerpo.replace(/\{\{nombre\}\}/g, nombre).replace(/\{\{empresa\}\}/g, empresa);
+
+            const imgPreviewEl = document.querySelector('#correoImagenPreview img');
+            if (imgPreviewEl) {
+                cuerpoFinal = `<img src="${imgPreviewEl.src}" style="max-width:100%; height:auto;" alt=""><br><br>` + cuerpoFinal;
+            }
+
+            document.getElementById('correoVistaPara').textContent = correoDestino;
+            document.getElementById('correoVistaAsunto').textContent = asuntoFinal || '(sin asunto)';
+
+            const adjuntoWrap = document.getElementById('correoVistaAdjuntoWrap');
+            if (correoPdfPath) {
+                adjuntoWrap.style.display = 'block';
+                document.getElementById('correoVistaAdjunto').textContent = correoPdfPath.split('/').pop();
+            } else {
+                adjuntoWrap.style.display = 'none';
+            }
+
+            const frame = document.getElementById('correoVistaFrame');
+            frame.srcdoc = `<div style="font-family:Arial, sans-serif; padding:12px; color:#212529;">${cuerpoFinal || '<em>(sin cuerpo)</em>'}</div>`;
+
+            document.getElementById('correoVistaPreviaPanel').style.display = 'block';
+        });
+
+        document.getElementById('correosEnviarButton').addEventListener('click', function() {
+            const asunto = document.getElementById('correoAsunto').value.trim();
+            const cuerpo = document.getElementById('correoCuerpo').value.trim();
+
+            if (!asunto) { showMessage('El asunto es obligatorio', 'error'); return; }
+            if (!cuerpo && !correoImagenPath) { showMessage('Agrega un cuerpo de correo o una imagen', 'error'); return; }
+            if (correosSeleccionados.size === 0) { showMessage('Selecciona al menos un destinatario', 'error'); return; }
+            if (correosCuota.cargada && correosSeleccionados.size > correosCuota.disponibles) {
+                showMessage(`Tu selección (${correosSeleccionados.size}) supera el cupo disponible (${correosCuota.disponibles}). Quita algunos destinatarios o espera a que se libere cupo.`, 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: `¿Enviar correo a ${correosSeleccionados.size} contacto(s)?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, enviar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                const btn = document.getElementById('correosEnviarButton');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
+
+                fetch(base_url + 'contactos/correos/enviar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            asunto,
+                            cuerpoHtml: cuerpo,
+                            imagenPath: correoImagenPath,
+                            pdfPath: correoPdfPath,
+                            contactoIds: Array.from(correosSeleccionados),
+                        })
+                    })
+                    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (!ok) throw new Error(data.message || 'Error al enviar');
+
+                        (data.detalles || []).forEach(d => {
+                            if (!d.estado) return;
+                            [globalResults, correosPool, explorerState.data].forEach(lista => {
+                                const c = lista.find(x => x.id === d.id);
+                                if (c) c.estado_envio_correo = d.estado;
+                            });
+                            const cacheado = explorerContactosCache.get(d.id);
+                            if (cacheado) cacheado.estado_envio_correo = d.estado;
+                        });
+
+                        correosSeleccionados.clear();
+                        cargarCuotaCorreos();
+                        mostrarResumenEnvio(data);
+                    })
+                    .catch(err => showMessage('Error al enviar correos: ' + err.message, 'error'))
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bx bx-send me-1"></i> Enviar Correo';
+                    });
+            });
+        });
+
+        /**
+         * Muestra el resumen final del envío (cuántos ok, fallidos, sin correo, pendientes por cupo)
+         * con el detalle por contacto, y cierra el modal de correos al confirmar.
+         */
+        function mostrarResumenEnvio(data) {
+            const detalles = data.detalles || [];
+
+            const listaHtml = detalles.map(d => {
+                const nombre = d.nombre || `Contacto #${d.id}`;
+                if (d.estado === 'enviado') {
+                    return `<div class="small border-bottom py-1">✅ <strong>${nombre}</strong> — enviado a ${d.correo || ''}</div>`;
+                }
+                if (d.estado === 'error') {
+                    return `<div class="small border-bottom py-1">❌ <strong>${nombre}</strong> — falló${d.error ? ': ' + d.error : ''}</div>`;
+                }
+                return `<div class="small border-bottom py-1">⚠️ <strong>${nombre}</strong> — sin correo registrado</div>`;
+            }).join('');
+
+            const huboProblemas = data.fallidos > 0 || data.sinCorreo > 0 || data.pendientesPorCuota > 0;
+            const icono = data.enviados === 0 ? 'error' : (huboProblemas ? 'warning' : 'success');
+            const titulo = data.enviados === 0 ? 'No se pudo enviar ningún correo' : (huboProblemas ? 'Envío completado con observaciones' : '¡Correos enviados!');
+
+            Swal.fire({
+                icon: icono,
+                title: titulo,
+                html: `
+                    <div class="text-start mb-2">
+                        <div>✅ Enviados: <strong>${data.enviados}</strong></div>
+                        <div>❌ Fallidos: <strong>${data.fallidos}</strong></div>
+                        <div>⚠️ Sin correo registrado: <strong>${data.sinCorreo}</strong></div>
+                        ${data.pendientesPorCuota > 0 ? `<div>⏳ Pendientes por cupo diario: <strong>${data.pendientesPorCuota}</strong></div>` : ''}
+                    </div>
+                    ${listaHtml ? `<div class="text-start" style="max-height:220px; overflow-y:auto; border-top:1px solid #eee; padding-top:8px;">${listaHtml}</div>` : ''}
+                `,
+                confirmButtonText: 'Entendido',
+            }).then(() => {
+                renderCorreosDestinatarios();
+                correosModal.hide();
+            });
+        }
+
+        // ---------- Total de contactos en la BD (informativo) ----------
+    function cargarTotalContactos() {
+        fetch(base_url + 'contactos/total')
+            .then(res => res.json())
+            .then(data => {
+                const label = document.getElementById('totalContactosLabel');
+                if (label) {
+                    label.textContent = `(${data.total.toLocaleString('es-PE')} contactos en total)`;
+                }
+            })
+            .catch(() => {
+                const label = document.getElementById('totalContactosLabel');
+                if (label) label.textContent = '';
+            });
+    }
+
+    cargarTotalContactos();
 
     })();
 </script>

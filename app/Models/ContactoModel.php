@@ -24,6 +24,7 @@ class ContactoModel extends Model
         'correo_corporativo_2', 'status_correo_electronico', 'status_correo_corporativo',
         'profesion', 'observacion', 'pais', 'nota_origen', 'unidad_negocio',
         'estado_envio_correo', 'correo_enviado_en',
+        'evento_id', 'importacion_id',
     ];
 
     public static function columnMapping(): array
@@ -77,7 +78,11 @@ class ContactoModel extends Model
      */
     public static function allColumns(): array
     {
-        return array_flip(self::columnMapping());
+        $columnas = array_flip(self::columnMapping());
+        // Columna calculada (join con eventos), no proviene del CSV pero sí es
+        // útil para mostrarla/filtrarla en el explorador y en los resultados.
+        $columnas['evento_nombre'] = 'Evento';
+        return $columnas;
     }
 
     /**
@@ -87,18 +92,20 @@ class ContactoModel extends Model
      *
      * Formato de $filtros:
      * [
-     *   'term'    => string,
-     *   'pais'    => string,
-     *   'empresa' => string,
-     *   'reglas'  => [ ['campo' => 'empresa', 'operador' => 'contiene', 'valor' => 'acme'], ... ]
+     *   'term'      => string,
+     *   'pais'      => string,
+     *   'empresa'   => string,
+     *   'evento_id' => int,
+     *   'reglas'    => [ ['campo' => 'empresa', 'operador' => 'contiene', 'valor' => 'acme'], ... ]
      * ]
      */
     public function aplicarFiltros(array $filtros): self
     {
-        $term    = trim((string) ($filtros['term'] ?? ''));
-        $pais    = trim((string) ($filtros['pais'] ?? ''));
-        $empresa = trim((string) ($filtros['empresa'] ?? ''));
-        $reglas  = $filtros['reglas'] ?? [];
+        $term     = trim((string) ($filtros['term'] ?? ''));
+        $pais     = trim((string) ($filtros['pais'] ?? ''));
+        $empresa  = trim((string) ($filtros['empresa'] ?? ''));
+        $eventoId = (int) ($filtros['evento_id'] ?? 0);
+        $reglas   = $filtros['reglas'] ?? [];
 
         if ($term !== '') {
             $this->groupStart();
@@ -116,6 +123,12 @@ class ContactoModel extends Model
             $this->like('empresa', $empresa);
         }
 
+        if ($eventoId > 0) {
+            $this->whereIn('contactos.id', function ($builder) use ($eventoId) {
+                return $builder->select('contacto_id')->from('contacto_importaciones')->where('evento_id', $eventoId);
+            });
+        }
+
         if (is_array($reglas)) {
             foreach ($reglas as $regla) {
                 $campo    = (string) ($regla['campo'] ?? '');
@@ -125,6 +138,25 @@ class ContactoModel extends Model
                 if (!in_array($campo, $this->allowedFields, true)) {
                     continue;
                 }
+
+                // "evento_id" e "importacion_id" en contactos solo guardan el
+                // ÚLTIMO evento/carga que tocó a ese contacto (se sobrescriben
+                // en cada nueva importación). Para que "igual" filtre por el
+                // historial real (todos los eventos/cargas que alguna vez
+                // tocaron al contacto) se consulta la bitácora completa
+                // contacto_importaciones en vez de la columna denormalizada.
+                if ($operador === 'igual' && in_array($campo, ['evento_id', 'importacion_id'], true) && $valor !== '') {
+                    $columnaPivot = $campo;
+                    $this->whereIn('contactos.id', function ($builder) use ($columnaPivot, $valor) {
+                        return $builder->select('contacto_id')->from('contacto_importaciones')->where($columnaPivot, $valor);
+                    });
+                    continue;
+                }
+
+                // Se prefija con "contactos." porque algunos listados hacen JOIN
+                // con la tabla eventos (que también tiene una columna "nombre"),
+                // y sin el prefijo el motor de base de datos la vería ambigua.
+                $campo = 'contactos.' . $campo;
 
                 switch ($operador) {
                     case 'contiene':
@@ -178,11 +210,13 @@ class ContactoModel extends Model
         $page    = max(1, $page);
         $perPage = max(1, min(500, $perPage));
 
+        $this->select('contactos.*, eventos.nombre AS evento_nombre')
+            ->join('eventos', 'eventos.id = contactos.evento_id', 'left');
         $this->aplicarFiltros($filtros);
         $total = $this->countAllResults(false);
 
         $offset = ($page - 1) * $perPage;
-        $data = $this->orderBy('id', 'DESC')->findAll($perPage, $offset);
+        $data = $this->orderBy('contactos.id', 'DESC')->findAll($perPage, $offset);
 
         return [
             'data'       => $data,
@@ -203,15 +237,16 @@ class ContactoModel extends Model
     }
 
     /**
-     * Búsqueda de texto libre, combinable con filtros de país y empresa.
+     * Búsqueda de texto libre, combinable con filtros de país, empresa y evento.
      */
-    public function buscar(string $term, string $pais = '', string $empresa = '')
+    public function buscar(string $term, string $pais = '', string $empresa = '', int $eventoId = 0)
     {
         $builder = $this->select(
-            'id, nombres_y_apellidos_completos, empresa, cargo, correo_corporativo,
-             correo_electronico, celular, telefono, nota_origen,
-             status_correo_corporativo, linkedin, pais, estado_envio_correo'
-        );
+            'contactos.id, contactos.nombres_y_apellidos_completos, contactos.empresa, contactos.cargo,
+             contactos.correo_corporativo, contactos.correo_electronico, contactos.celular, contactos.telefono,
+             contactos.nota_origen, contactos.status_correo_corporativo, contactos.linkedin, contactos.pais,
+             contactos.estado_envio_correo, contactos.evento_id, eventos.nombre AS evento_nombre'
+        )->join('eventos', 'eventos.id = contactos.evento_id', 'left');
 
         if ($term !== '') {
             $builder->groupStart();
@@ -233,7 +268,13 @@ class ContactoModel extends Model
             $builder->like('empresa', $empresa);
         }
 
-        return $builder->orderBy('id', 'DESC')->findAll(500);
+        if ($eventoId > 0) {
+            $builder->whereIn('contactos.id', function ($sub) use ($eventoId) {
+                return $sub->select('contacto_id')->from('contacto_importaciones')->where('evento_id', $eventoId);
+            });
+        }
+
+        return $builder->orderBy('contactos.id', 'DESC')->findAll(500);
     }
 
     /**

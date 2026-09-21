@@ -40,6 +40,10 @@ $routes->group('', ['filter' => 'AuthCheck'], function ($routes) {
     $routes->post('contactos/crear', 'Admin\ContactoController::crear');
     $routes->post('contactos/eliminar-por-filtro', 'Admin\ContactoController::eliminarPorFiltro');
     $routes->get('contactos/exportar-csv', 'Admin\ContactoController::exportarCsv');
+    $routes->get('contactos/eventos', 'Admin\ContactoController::eventos');
+    $routes->post('contactos/eventos/crear', 'Admin\ContactoController::crearEvento');
+    $routes->get('contactos/historial', 'Admin\ContactoController::historial');
+    $routes->get('contactos/historial/(:num)/contactos', 'Admin\ContactoController::historialContactos/$1');
     $routes->get('contactos/correos/cuota', 'Admin\EnvioCorreoController::cuota');
     $routes->post('contactos/correos/subir-archivo', 'Admin\EnvioCorreoController::subirArchivo');
     $routes->post('contactos/correos/enviar', 'Admin\EnvioCorreoController::enviar');

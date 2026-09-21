@@ -1,2 +1,7 @@
 .env
-.env
+writable/*
+!writable/index.html
+public/uploads/*
+vendor/
+node_modules/
+*.log

@@ -4,14 +4,20 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\ContactoModel;
+use App\Models\EventoModel;
+use App\Models\ImportacionModel;
 
 class ContactoController extends BaseController
 {
     protected ContactoModel $contactoModel;
+    protected EventoModel $eventoModel;
+    protected ImportacionModel $importacionModel;
 
     public function __construct()
     {
-        $this->contactoModel = new ContactoModel();
+        $this->contactoModel    = new ContactoModel();
+        $this->eventoModel      = new EventoModel();
+        $this->importacionModel = new ImportacionModel();
     }
 
     public function index()
@@ -21,15 +27,86 @@ class ContactoController extends BaseController
 
     public function buscar()
     {
-        $term    = trim((string) $this->request->getGet('term'));
-        $pais    = trim((string) $this->request->getGet('pais'));
-        $empresa = trim((string) $this->request->getGet('empresa'));
+        $term     = trim((string) $this->request->getGet('term'));
+        $pais     = trim((string) $this->request->getGet('pais'));
+        $empresa  = trim((string) $this->request->getGet('empresa'));
+        $eventoId = (int) $this->request->getGet('evento_id');
 
-        if ($term === '' && $pais === '' && $empresa === '') {
+        if ($term === '' && $pais === '' && $empresa === '' && $eventoId <= 0) {
             return $this->response->setJSON([]);
         }
 
-        return $this->response->setJSON($this->contactoModel->buscar($term, $pais, $empresa));
+        return $this->response->setJSON($this->contactoModel->buscar($term, $pais, $empresa, $eventoId));
+    }
+
+    /**
+     * Lista de eventos (con conteo de contactos) para el selector de eventos
+     * y para el filtro rápido de búsqueda.
+     */
+    public function eventos()
+    {
+        return $this->response->setJSON($this->eventoModel->listarConConteo());
+    }
+
+    /**
+     * Crea un evento nuevo desde el formulario de carga de CSV o desde un
+     * modal dedicado de administración de eventos.
+     */
+    public function crearEvento()
+    {
+        $data = $this->request->getJSON(true) ?? $this->request->getPost();
+
+        $nombre       = trim((string) ($data['nombre'] ?? ''));
+        $descripcion  = trim((string) ($data['descripcion'] ?? ''));
+        $fechaEvento  = trim((string) ($data['fecha_evento'] ?? ''));
+        $lugar        = trim((string) ($data['lugar'] ?? ''));
+
+        if ($nombre === '') {
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'El nombre del evento es obligatorio.']);
+        }
+
+        $evento = $this->eventoModel->buscarOcrear($nombre, $descripcion, $fechaEvento, $lugar);
+
+        return $this->response->setJSON($evento);
+    }
+
+    /**
+     * Historial de cargas de CSV: qué archivo se subió, para qué evento,
+     * cuándo, cuántos contactos nuevos y cuántos actualizados.
+     */
+    public function historial()
+    {
+        $page     = max(1, (int) $this->request->getGet('page'));
+        $perPage  = (int) $this->request->getGet('perPage');
+        $perPage  = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 25;
+        $eventoId = (int) $this->request->getGet('evento_id');
+
+        return $this->response->setJSON($this->importacionModel->paginar($page, $perPage, $eventoId));
+    }
+
+    /**
+     * Lista de contactos que pertenecen a una carga (importación) puntual
+     * del historial. Se usa cuando el usuario quiere ver exactamente qué se
+     * subió en un archivo concreto.
+     */
+    public function historialContactos($id = null)
+    {
+        $id = (int) $id;
+
+        if ($id <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['message' => 'ID de importación inválido']);
+        }
+
+        $filtros = $this->leerFiltrosDeGet();
+        $filtros['reglas'] = [
+            ['campo' => 'importacion_id', 'operador' => 'igual', 'valor' => (string) $id],
+        ];
+
+        $page    = max(1, (int) $this->request->getGet('page'));
+        $perPage = (int) $this->request->getGet('perPage');
+        $perPage = in_array($perPage, [25, 50, 100, 200, 500], true) ? $perPage : 50;
+
+        return $this->response->setJSON($this->contactoModel->paginar($page, $perPage, $filtros));
     }
 
     public function paises()
@@ -151,6 +228,31 @@ class ContactoController extends BaseController
             ]);
         }
 
+        $nombreArchivoOriginal = $file->getClientName();
+
+        // --- Evento al que pertenece esta carga ---
+        // El usuario puede elegir un evento ya existente (evento_id) o escribir
+        // el nombre de uno nuevo (evento_nombre), que se crea al vuelo.
+        $eventoId          = (int) $this->request->getPost('evento_id');
+        $eventoNombreNuevo = trim((string) $this->request->getPost('evento_nombre'));
+
+        $evento = null;
+
+        if ($eventoId > 0) {
+            $evento = $this->eventoModel->find($eventoId);
+            if (!$evento) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'message' => 'El evento seleccionado ya no existe. Selecciona otro o crea uno nuevo.',
+                ]);
+            }
+        } elseif ($eventoNombreNuevo !== '') {
+            $evento = $this->eventoModel->buscarOcrear($eventoNombreNuevo);
+        }
+
+        // El evento es opcional: se permite seguir cargando bases "sueltas"
+        // sin asociarlas a ningún evento si así se prefiere.
+        $eventoId = $evento['id'] ?? null;
+
         $mapping = ContactoModel::columnMapping();
 
         $normalize = function (string $text): string {
@@ -266,6 +368,19 @@ class ContactoController extends BaseController
             ]);
         }
 
+        // Se deja registrada la carga en el historial ANTES de procesar las
+        // filas para poder etiquetar cada contacto (nuevo o actualizado) con
+        // el ID de esta importación puntual.
+        $importacionId = $this->importacionModel->insert([
+            'evento_id'      => $eventoId,
+            'nombre_archivo' => $nombreArchivoOriginal,
+            'total_filas'    => count($parsedRows),
+            'insertados'     => 0,
+            'actualizados'   => 0,
+            'usuario_id'     => session()->get('user_id'),
+            'usuario_nombre' => session()->get('name') ?? session()->get('email'),
+        ], true);
+
         $documentos        = array_values(array_unique(array_filter(array_column($parsedRows, 'nro_documento'))));
         $correosPersonales = array_values(array_unique(array_filter(array_column($parsedRows, 'correo_electronico'))));
         $correosCorp       = array_values(array_unique(array_filter(array_column($parsedRows, 'correo_corporativo'))));
@@ -327,11 +442,21 @@ class ContactoController extends BaseController
 
             if ($matchedId !== null) {
                 $record['id'] = $matchedId;
+                $record['importacion_id'] = $importacionId;
+                if ($eventoId) {
+                    $record['evento_id'] = $eventoId;
+                }
                 $toUpdate[] = $record;
                 continue;
             }
 
-            $key = $record['nro_documento'] ?: ($record['correo_electronico'] ?: $record['correo_corporativo']);
+            $key = ($record['nro_documento'] ?? '')
+                ?: (($record['correo_electronico'] ?? '') ?: ($record['correo_corporativo'] ?? ''));
+
+            $record['importacion_id'] = $importacionId;
+            if ($eventoId) {
+                $record['evento_id'] = $eventoId;
+            }
 
             if ($key !== '' && isset($insertKeyIndex[$key])) {
                 $toInsert[$insertKeyIndex[$key]] = array_merge($toInsert[$insertKeyIndex[$key]], $record);
@@ -367,10 +492,41 @@ class ContactoController extends BaseController
             ]);
         }
 
+        $this->importacionModel->update($importacionId, [
+            'insertados'   => $insertedCount,
+            'actualizados' => $updatedCount,
+        ]);
+
+        // Bitácora histórica: registra qué contactos tocó ESTA importación
+        // puntual, sin sobrescribir registros de cargas anteriores. Esto es
+        // lo que permite ver después "qué trajo esta carga" y "quién ha
+        // asistido a este evento alguna vez", aunque ese contacto haya sido
+        // actualizado después por otra carga distinta.
+        $tocados = $this->contactoModel
+            ->select('id, evento_id')
+            ->where('importacion_id', $importacionId)
+            ->findAll();
+
+        if (!empty($tocados)) {
+            $ahora = date('Y-m-d H:i:s');
+            $bitacora = array_map(static fn ($c) => [
+                'contacto_id'    => $c['id'],
+                'importacion_id' => $importacionId,
+                'evento_id'      => $c['evento_id'],
+                'created_at'     => $ahora,
+            ], $tocados);
+
+            foreach (array_chunk($bitacora, 500) as $chunk) {
+                $db->table('contacto_importaciones')->insertBatch($chunk);
+            }
+        }
+
         $totalEnBD = $this->contactoModel->countAllResults();
 
+        $etiquetaEvento = $evento ? " (evento: \"{$evento['nombre']}\")" : '';
+
         return $this->response->setJSON([
-            'message' => "Carga completa. {$insertedCount} contactos nuevos, {$updatedCount} actualizados (ya existían). "
+            'message' => "Carga completa{$etiquetaEvento}. {$insertedCount} contactos nuevos, {$updatedCount} actualizados (ya existían). "
                 . "Total de contactos en la base de datos: {$totalEnBD}.",
             'inserted' => $insertedCount,
             'updated'  => $updatedCount,
@@ -594,8 +750,19 @@ class ContactoController extends BaseController
         $dbToLabel = ContactoModel::allColumns(); // dbField => Label
         $fields = array_keys($dbToLabel);
 
+        // "evento_nombre" es una columna calculada (viene de la tabla eventos
+        // vía JOIN), no existe directamente en "contactos". El resto de
+        // columnas se prefija con "contactos." porque el JOIN con eventos
+        // también tiene una columna "nombre" (nombre del evento) que sin
+        // prefijo generaría un error de columna ambigua.
+        $selectParts = array_map(
+            fn ($f) => $f === 'evento_nombre' ? 'eventos.nombre AS evento_nombre' : 'contactos.' . $f,
+            $fields
+        );
+
         $rows = (new ContactoModel())
-            ->select(implode(',', $fields))
+            ->select(implode(',', $selectParts))
+            ->join('eventos', 'eventos.id = contactos.evento_id', 'left')
             ->aplicarFiltros($filtros)
             ->findAll($total);
 
@@ -626,9 +793,10 @@ class ContactoController extends BaseController
     private function leerFiltrosDeGet(): array
     {
         $filtros = [
-            'term'    => trim((string) $this->request->getGet('term')),
-            'pais'    => trim((string) $this->request->getGet('pais')),
-            'empresa' => trim((string) $this->request->getGet('empresa')),
+            'term'      => trim((string) $this->request->getGet('term')),
+            'pais'      => trim((string) $this->request->getGet('pais')),
+            'empresa'   => trim((string) $this->request->getGet('empresa')),
+            'evento_id' => (int) $this->request->getGet('evento_id'),
         ];
 
         $reglasJson = $this->request->getGet('reglas');
